@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitales Gipfelbuch</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #qrCode {
+            margin: 20px auto;
+            max-width: 300px;
+        }
+        h1 { color: #333; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🏔️ Digitales Gipfelbuch</h1>
+    <div id="qrCode"></div>
+    <p>Scanne den QR-Code und trage deine Gipfelerlebnisse ein!</p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const qr = qrcode(0, 'M');
+            qr.addData('https://johanneseng.github.io/serverless-summit-book/');
+            qr.make();
+            document.getElementById('qrCode').innerHTML = qr.createImgTag(10);
+        });
+    </script>
+</body>
+</html>
