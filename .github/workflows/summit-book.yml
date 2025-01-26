@@ -1,20 +1,8 @@
 name: Summit Book Entry
 
 on:
-  workflow_dispatch:
-    inputs:
-      mountain:
-        description: 'Mountain Name'
-        required: true
-      climber:
-        description: 'Climber Name'
-        required: true
-      date:
-        description: 'Climb Date'
-        required: true
-      comments:
-        description: 'Entry Comments'
-        required: false
+  repository_dispatch:
+    types: [summit_book_entry]
 
 jobs:
   create-entry:
@@ -23,14 +11,12 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Create Entry File
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         mkdir -p entries
-        echo "mountain: ${{ github.event.inputs.mountain }}" > entries/entry_$(date +"%Y%m%d_%H%M%S").yml
-        echo "climber: ${{ github.event.inputs.climber }}" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
-        echo "date: ${{ github.event.inputs.date }}" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
-        echo "comments: ${{ github.event.inputs.comments }}" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
+        echo "mountain: ${{ github.event.client_payload.mountain }}" > entries/entry_$(date +"%Y%m%d_%H%M%S").yml
+        echo "climber: ${{ github.event.client_payload.climber }}" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
+        echo "date: ${{ github.event.client_payload.date }}" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
+        echo "comments: ${{ github.event.client_payload.comments }}" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
         echo "timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> entries/entry_$(date +"%Y%m%d_%H%M%S").yml
     
     - name: Commit and Push
