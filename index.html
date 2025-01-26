@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gipfelbuch Digital</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,7 +29,7 @@
             box-sizing: border-box;
         }
         #dateClimbed {
-            height: 50px;  /* Größerer Kalender-Button */
+            height: 50px;
             font-size: 16px;
         }
         button {
@@ -46,16 +44,10 @@
         button:hover {
             background-color: #45a049;
         }
-        #qrCode {
-            text-align: center;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
     <h1>🏔️ Digitales Gipfelbuch</h1>
-    
-    <div id="qrCode"></div>
     
     <form id="entryForm">
         <input type="text" id="mountainName" placeholder="Berg / Gipfel" required>
@@ -66,53 +58,36 @@
     </form>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // QR-Code Generator
-            const qr = qrcode(0, 'M');
-            qr.addData(window.location.href);
-            qr.make();
-            document.getElementById('qrCode').innerHTML = qr.createImgTag(5);
+        document.getElementById('entryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const entry = {
+                mountain: document.getElementById('mountainName').value,
+                climber: document.getElementById('climberName').value,
+                date: document.getElementById('dateClimbed').value,
+                comments: document.getElementById('comments').value
+            };
 
-            document.getElementById('entryForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const entry = {
-                    mountain: document.getElementById('mountainName').value,
-                    climber: document.getElementById('climberName').value,
-                    date: document.getElementById('dateClimbed').value,
-                    comments: document.getElementById('comments').value,
-                    timestamp: new Date().toISOString()
-                };
+            try {
+                const response = await fetch('https://api.github.com/repos/JohannesEng/serverless-summit-book/dispatches', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${import.meta.env.VITE_GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        event_type: 'summit_book_entry',
+                        client_payload: entry
+                    })
+                });
 
-                try {
-                    const response = await fetch('https://api.github.com/repos/JohannesEng/serverless-summit-book/dispatches', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `token ${localStorage.getItem('githubToken')}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        },
-                        body: JSON.stringify({
-                            event_type: 'summit_book_entry',
-                            client_payload: entry
-                        })
-                    });
-
-                    if (response.ok) {
-                        alert('Eintrag erfolgreich! Danke für deine Berggeschichte.');
-                    } else {
-                        throw new Error('Fehler beim Speichern');
-                    }
-                } catch (error) {
-                    console.error('Fehler:', error);
-                    alert('Fehler beim Speichern des Eintrags');
+                if (response.ok) {
+                    alert('Eintrag erfolgreich! Danke für deine Berggeschichte.');
+                } else {
+                    throw new Error('Fehler beim Speichern');
                 }
-            });
-
-            // Token-Eingabe-Funktion
-            if (!localStorage.getItem('githubToken')) {
-                const token = prompt('Bitte GitHub Personal Access Token eingeben:');
-                if (token) {
-                    localStorage.setItem('githubToken', token);
-                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Speichern des Eintrags');
             }
         });
     </script>
