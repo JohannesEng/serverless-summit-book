@@ -2,13 +2,54 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gipfelbuch Digital</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-        #entryForm { display: flex; flex-direction: column; gap: 10px; }
-        #qrCode { margin: 20px 0; text-align: center; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #entryForm {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        #dateClimbed {
+            height: 50px;  /* Größerer Kalender-Button */
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #qrCode {
+            text-align: center;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -42,37 +83,16 @@
                     timestamp: new Date().toISOString()
                 };
 
-                // GitHub Repository Details (would be configured)
-                const GITHUB_REPO_OWNER = 'your-username';
-                const GITHUB_REPO_NAME = 'summit-book';
-                const GITHUB_ACCESS_TOKEN = 'your-github-personal-access-token';
-
                 try {
-                    // Create unique filename
-                    const filename = `entries/${entry.mountain}_${entry.timestamp}.yml`;
-                    const fileContent = jsyaml.dump(entry);
-                    const encodedContent = btoa(unescape(encodeURIComponent(fileContent)));
-
-                    // GitHub API Call to Create File via Pull Request
-                    const response = await fetch('https://api.github.com/repos/'+GITHUB_REPO_OWNER+'/'+GITHUB_REPO_NAME+'/pulls', {
+                    const response = await fetch('https://api.github.com/repos/JohannesEng/serverless-summit-book/dispatches', {
                         method: 'POST',
                         headers: {
-                            'Authorization': `token ${GITHUB_ACCESS_TOKEN}`,
+                            'Authorization': `token ${localStorage.getItem('githubToken')}`,
                             'Accept': 'application/vnd.github.v3+json'
                         },
                         body: JSON.stringify({
-                            title: `New Summit Entry: ${entry.mountain}`,
-                            body: `Neuer Gipfelbucheintrag von ${entry.climber}`,
-                            head: `new-entry-${Date.now()}`,
-                            base: 'main',
-                            changes: {
-                                files: [{
-                                    path: filename,
-                                    mode: '100644',
-                                    type: 'blob',
-                                    content: encodedContent
-                                }]
-                            }
+                            event_type: 'summit_book_entry',
+                            client_payload: entry
                         })
                     });
 
@@ -86,6 +106,14 @@
                     alert('Fehler beim Speichern des Eintrags');
                 }
             });
+
+            // Token-Eingabe-Funktion
+            if (!localStorage.getItem('githubToken')) {
+                const token = prompt('Bitte GitHub Personal Access Token eingeben:');
+                if (token) {
+                    localStorage.setItem('githubToken', token);
+                }
+            }
         });
     </script>
 </body>
